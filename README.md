@@ -12,3 +12,6 @@ To run the prototype execute the following command in the main directory (pseudo
 python app.py
 ```
 Then go to [http://127.0.0.1:8050/](http://127.0.0.1:8050/)
+# References
++ [Dash documentation](https://dash.plotly.com/introduction)
++ [Spacy matcher](https://spacy.io/api/matcher)
