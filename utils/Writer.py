@@ -1,4 +1,7 @@
-
+"""
+This file contains the implementation of Writer class.
+This class is responsble of saving files and resultats of the prototype.
+"""
 import pandas as pd
 import datetime
 import os
@@ -6,6 +9,9 @@ import ast
 
 class Writer(object):
     def __init__(self):
+        """
+        Initializes Writer object.
+        """
         self._dict_results = {'file name':-1,
                                 'hash': -1,
                                 'pseudonymised file': -1,
@@ -31,6 +37,9 @@ class Writer(object):
         self.read_check_files()
 
     def read_check_files(self):
+        """
+        Insures that all file mentioned in results.csv exists in corpus directory.
+        """
         df=pd.read_csv(self._results_file)
         files=os.listdir(self._corpus_path)
         df=df[(df['file name'].isin(files)) & (df['pseudonymised file'].isin(files))]
@@ -46,12 +55,22 @@ class Writer(object):
 
 
     def is_file_in(self,hash):
+        """Verifies if a hash existes in results.csv
+        Args:
+            hash (str): hash (of the text content) to be searching the the results file.
+        Returns:
+            bool: if the hash is in the results file or not. """
         return (hash in self.df.hash.tolist())
 
     def set_doc_instances(self,doc,override=True):
+        """sets a Document object attributes.
+        Args:
+            doc (Document): Document to be updated
+            override (bool): to override attributes if the doc is already traited and saved in results file.
+        """
         def get_non_existent_path(f_name):
             """
-            Get the path to a filename which does not exist by incrementing path.
+            Gets the path to a filename which does not exist by incrementing path.
             """
             f_path=os.path.join(self._corpus_path,f_name)
             if not os.path.exists(f_path):
@@ -76,6 +95,10 @@ class Writer(object):
             with open(os.path.join(self._corpus_path,doc.pseudo_f_name), 'r',encoding="utf-8") as f:
                 doc.set_pseudo_text(f.read())
     def save_doc(self,doc):
+        """Saves doc results, text and pseudonymized text.
+        Args:
+            doc (Document): Document to be saved.
+        """
         self.df.drop(self.df[(self.df['file name']==doc.f_name) & (self.df['pseudonymised file']==doc.pseudo_f_name)].index,inplace=True)
         self.df=self.df.append(doc.get_doc_dic(),ignore_index=True)
         self.df.to_csv(self._results_file,index=False)

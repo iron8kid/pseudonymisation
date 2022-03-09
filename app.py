@@ -1,3 +1,6 @@
+"""
+This file represents the main dash app where Dash and Facade objects are instanced
+"""
 from dash import Dash, dcc, html, Input, Output, callback
 import dash_bootstrap_components as dbc
 
@@ -14,8 +17,6 @@ dcc.Store(id='file_uploaded', storage_type='local'),
 ])
 global facade
 facade=Facade()
-
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)

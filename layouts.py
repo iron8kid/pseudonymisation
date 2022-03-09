@@ -1,3 +1,7 @@
+"""
+This files containes front-end components of the app.
+the app has mainly three interfaces Uploading, settings, and processing
+"""
 from dash import dcc, html
 import dash_bootstrap_components as dbc
 from dash import  html

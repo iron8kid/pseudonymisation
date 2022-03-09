@@ -1,3 +1,7 @@
+"""
+This file contains the back-end implementation of the dash web app.
+"""
+
 from dash import Input, Output, callback,State, html
 import base64
 from app import facade
@@ -6,6 +10,8 @@ from pylighter import Annotation
 import dash
 from dash.exceptions import PreventUpdate
 DEFAULT_LABEL_COLORS={'ORG': '#7aecec', 'PRODUCT': '#bfeeb7', 'GPE': '#feca74', 'LOC': '#ff9561', 'PER': '#aa9cfc', 'NORP': '#c887fb', 'FAC': '#9cc9cc', 'EVENT': '#ffeb80', 'LAW': '#ff8197', 'LANGUAGE': '#ff8197', 'WORK_OF_ART': '#f0d0ff', 'DATE': '#bfe1d9', 'TIME': '#bfe1d9', 'MONEY': '#e4e7d2', 'QUANTITY': '#e4e7d2', 'ORDINAL': '#e4e7d2', 'CARDINAL': '#e4e7d2', 'PERCENT': '#e4e7d2'}
+
+# entname, entbox, entity, and render are helper functions used to display the original text with identified entities#
 def entname(name):
     return html.Span(name, style={
         "font-size": "0.8em",
@@ -46,11 +52,13 @@ def render(text,ents):
         last_idx = ent[1]
     children.append(text[last_idx:])
     return children
-
+######################################################################
 @callback(Output('page-content', 'children'),
               Input('url', 'pathname'),
               Input('file_uploaded', 'data'))
 def display_page(pathname,state):
+    """ navigates between app interfaces.
+    """
     if pathname == '/settings':
          return setting_layout
     elif pathname == '/processing' and state==True and facade.current_doc is not None:
@@ -61,6 +69,8 @@ def display_page(pathname,state):
           Output('patterns', 'value'),
           Input('url', 'pathname'))
 def display_settings(pathname):
+    """ displays configuration in the settting interface
+    """
     if pathname == '/settings':
          return facade.conf.model_path,str(facade.conf.patterns)
     else:
@@ -73,6 +83,9 @@ Output("positioned-toast", "children"),
           State('path', 'value'),
           State('patterns', 'value'))
 def update_settings(n_clicks,new_path,new_patterns):
+    """
+    updates the config.ini file using the user input
+    """
     if n_clicks is not None:
         if(facade.update(new_path,new_patterns)):
             return True,'success','Settings successfuly updated'
@@ -87,6 +100,9 @@ def update_settings(n_clicks,new_path,new_patterns):
           Input("load_previous_results", "n_clicks"),
           Input("override_previous_results", "n_clicks"),)
 def update_document(content,load,override):
+    """
+    reads the uploaded text file and updates facade current_doc attribute
+    """
     ctx = dash.callback_context
     if content is None:
         return dash.no_update,dash.no_update,dash.no_update
@@ -114,6 +130,9 @@ def update_document(content,load,override):
 Output('Orignal_text_rendred', 'data'),
            Input('file_uploaded', 'data'))
 def set_text(state):
+    """
+    dispalys the orignal text
+    """
     if state is True:
         facade.run_model()
         return render(facade.current_doc.text,facade.current_doc.ents),True
@@ -124,6 +143,9 @@ def set_text(state):
 Output("standalone-checkbox", 'value'),
            Input('Orignal_text_rendred', 'data'))
 def set_new_text(state):
+    """
+    displays the pseudonymized text
+    """
     if state is True:
         facade.pseudonymise_doc()
         return facade.current_doc.pseudo_text,facade.current_doc.validated
@@ -137,6 +159,9 @@ Input('save_button', 'n_clicks'),
 Input('new_text', 'value'),
 Input('standalone-checkbox', 'value'))
 def save_file(n_clicks,new_pseudo_text,new_validated):
+    """
+    saves files (original text and pseudonimzed text in corpus directory) and results (in results.csv file)
+    """
     if new_pseudo_text is not None:
         facade.current_doc.set_pseudo_text(new_pseudo_text)
     if new_validated is not None:
