@@ -78,7 +78,7 @@ class Model(object):
         """
         # PER part
 
-        df_names_data_base = pd.read_csv('analyses-trails-in-france-prenoms-hf.csv', header=[0])
+        df_names_data_base = pd.read_csv('analyses-trails-in-france-prenoms-hf.csv', header=[0])  # source: https://www.data.gouv.fr/fr/datasets/liste-de-prenoms/#community-resources
         pseudonyms = []
         # this list stores the indices of the start / end of text that doesn't contain PER
         pseudonyms_indices = [0]
