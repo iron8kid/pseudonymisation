@@ -140,8 +140,7 @@ class Model(object):
                         df_used_names.to_csv('used_names.csv', index=False)
                         df_indices.to_csv('indices.csv', index=False)
                         return pseudonym
-                # if the name doesn't exist in the data base, it will be replaced with "$NAME$"
-                else:
-                    df_used_names = df_used_names.append({'name': name, 'pseudonym': '$NAME$'}, ignore_index=True)
-                    df_used_names.to_csv('used_names.csv', index=False)
-                    return '$NAME$'
+            # if the name doesn't exist in the data base, it will be replaced with "$NAME$"
+            df_used_names = df_used_names.append({'name': name, 'pseudonym': '$NAME$'}, ignore_index=True)
+            df_used_names.to_csv('used_names.csv', index=False)
+            return '$NAME$'
