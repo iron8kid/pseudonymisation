@@ -5,6 +5,7 @@ This class is responsible for cleaning text, detecting NER, and text pseudonymiz
 
 import spacy
 from spacy.matcher import Matcher
+import pandas as pd
 
 def reindex(ent,start,end):
     """A helper function used by predict_ner function; it updates entity attributes, if needed, when inserting a new word in the text starting at index start.
@@ -67,11 +68,80 @@ class Model(object):
             text=text[:idx[0]]+idx[2]+text[idx[0]:]
             ents=[reindex(ent,idx[0],idx[1]) for ent in ents]
         return ents
-    def pseudonymise(self,doc):
+
+    def pseudonymise(self, doc):
         """pseudonymizes text.
         Args:
             doc (Document): the Document object to be pseudonimised.
         Returns:
             (str): pseudonymized text.
         """
+        # PER part
+
+        df_names_data_base = pd.read_csv('analyses-trails-in-france-prenoms-hf.csv', header=[0])
+        pseudonyms = []
+        # this list stores the indices of the start / end of text that doesn't contain PER
+        pseudonyms_indices = [0]
+        text = ''
+        for ent in doc.ents:
+            if ent[2] == 'PER':
+                name = doc.text[ent[0]:ent[1]]
+                pseudonym = self.pseudo_name(name, df_names_data_base)
+                pseudonyms.append(pseudonym)
+                pseudonyms_indices.append(ent[0])
+                pseudonyms_indices.append(ent[1])
+        pseudonyms_indices.append(len(doc.text))
+        for i, pseudonym in enumerate(pseudonyms):
+            text = text + doc.text[pseudonyms_indices[2*i]:pseudonyms_indices[2*i+1]] + pseudonym
+        # add the last part
+        text = text + doc.text[pseudonyms_indices[-2]:pseudonyms_indices[-1]]
+
+        doc.text = text
         return doc.text
+
+    def pseudo_name(self, name, df_names_data_base):
+        """
+        Pseudonymizes the name.
+        :param name: the name to be replaced
+        :return: the pseudonym
+        """
+        df_used_names = pd.read_csv('used_names.csv', header=[0])
+        df_indices = pd.read_csv('indices.csv', header=[0])
+        # if this name has been replaced before
+        if df_used_names['name'].isin([name]).any():
+            # i_used_names = df_used_names.index[df_used_names['name'] == name].tolist()
+            row_used_names = df_used_names[df_used_names['name'] == name]
+            return row_used_names.pseudonym.item()
+        # if this name appears for the first time
+        else:
+            for i, row in df_names_data_base.iterrows():
+                if row['01_prenom'] == name:
+                    gender = row['02_genre']
+                    if gender == 'm':
+                        index = df_indices['current_m_index'][0] + 1
+                        # find the next male name, and it can't be the same name
+                        while df_names_data_base['02_genre'][index] != 'm' or df_names_data_base['01_prenom'][index] == name:
+                            index += 1
+                        pseudonym = df_names_data_base['01_prenom'][index]
+                        df_used_names = df_used_names.append({'name': name, 'pseudonym': pseudonym}, ignore_index=True)
+                        df_indices['current_m_index'] = index
+                        df_used_names.to_csv('used_names.csv', index=False)
+                        df_indices.to_csv('indices.csv', index=False)
+                        return pseudonym
+                    # if the gender is female or m/f or f/m
+                    else:
+                        index = df_indices['current_f_index'][0] + 1
+                        # find the next female name, and it can't be the same name
+                        while df_names_data_base['02_genre'][index] == 'm' or df_names_data_base['01_prenom'][index] == name:
+                            index += 1
+                        pseudonym = df_names_data_base['01_prenom'][index]
+                        df_used_names = df_used_names.append({'name': name, 'pseudonym': pseudonym}, ignore_index=True)
+                        df_indices['current_f_index'] = index
+                        df_used_names.to_csv('used_names.csv', index=False)
+                        df_indices.to_csv('indices.csv', index=False)
+                        return pseudonym
+                # if the name doesn't exist in the data base, it will be replaced with "$NAME$"
+                else:
+                    df_used_names = df_used_names.append({'name': name, 'pseudonym': '$NAME$'}, ignore_index=True)
+                    df_used_names.to_csv('used_names.csv', index=False)
+                    return '$NAME$'
