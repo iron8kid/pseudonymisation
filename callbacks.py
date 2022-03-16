@@ -6,7 +6,6 @@ from dash import Input, Output, callback,State, html
 import base64
 from app import facade
 from layouts import uploading_layout, processing_layout,setting_layout
-from pylighter import Annotation
 import dash
 from dash.exceptions import PreventUpdate
 DEFAULT_LABEL_COLORS={'ORG': '#7aecec', 'PRODUCT': '#bfeeb7', 'GPE': '#feca74', 'LOC': '#ff9561', 'PER': '#aa9cfc', 'NORP': '#c887fb', 'FAC': '#9cc9cc', 'EVENT': '#ffeb80', 'LAW': '#ff8197', 'LANGUAGE': '#ff8197', 'WORK_OF_ART': '#f0d0ff', 'DATE': '#bfe1d9', 'TIME': '#bfe1d9', 'MONEY': '#e4e7d2', 'QUANTITY': '#e4e7d2', 'ORDINAL': '#e4e7d2', 'CARDINAL': '#e4e7d2', 'PERCENT': '#e4e7d2'}
