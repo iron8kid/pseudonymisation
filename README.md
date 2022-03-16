@@ -3,7 +3,7 @@ The python version used when developing this prototype was 3.7.
 to install requirements execute the following commands
 
 ```
-pip install -r requirements
+pip install -r requirements.txt
 python -m spacy download fr_core_news_lg
 ```
 # Usage
