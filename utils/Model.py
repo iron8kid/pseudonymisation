@@ -78,7 +78,6 @@ class Model(object):
         """
         # PER part
 
-        df_names_data_base = pd.read_csv('analyses-trails-in-france-prenoms-hf.csv', header=[0])  # source: https://www.data.gouv.fr/fr/datasets/liste-de-prenoms/#community-resources
         pseudonyms = []
         # this list stores the indices of the start / end of text that doesn't contain PER
         pseudonyms_indices = [0]
@@ -86,7 +85,7 @@ class Model(object):
         for ent in doc.ents:
             if ent[2] == 'PER':
                 name = doc.text[ent[0]:ent[1]]
-                pseudonym = self.pseudo_name(name, df_names_data_base)
+                pseudonym = self.pseudo_name(name)
                 pseudonyms.append(pseudonym)
                 pseudonyms_indices.append(ent[0])
                 pseudonyms_indices.append(ent[1])
@@ -99,19 +98,27 @@ class Model(object):
         doc.text = text
         return doc.text
 
-    def pseudo_name(self, name, df_names_data_base):
+    def pseudo_name(self, name):
         """
         Pseudonymizes the name.
-        :param name: the name to be replaced
-        :return: the pseudonym
+        Args:
+            name: the name to be replaced
+        Returns:
+            the pseudonym
         """
-        df_used_names = pd.read_csv('used_names.csv', header=[0])
-        df_indices = pd.read_csv('indices.csv', header=[0])
+        # source: https://www.data.gouv.fr/fr/datasets/liste-de-prenoms/#community-resources
+        df_names_data_base = pd.read_csv('utils/analyses-trails-in-france-prenoms-hf.csv', header=[
+            0])
+        # pseudonyms.csv is a subset of analyses-trails-in-france-prenoms-hf.csv, all the names
+        # start with a capital letter, and it is shuffled
+        df_pseudonums = pd.read_csv('utils/pseudonyms.csv', header=[0])
+        df_used_names = pd.read_csv('utils/used_names.csv', header=[0])
+        df_indices = pd.read_csv('utils/indices.csv', header=[0])
         # if this name has been replaced before
         if df_used_names['name'].isin([name]).any():
-            # i_used_names = df_used_names.index[df_used_names['name'] == name].tolist()
             row_used_names = df_used_names[df_used_names['name'] == name]
             return row_used_names.pseudonym.item()
+
         # if this name appears for the first time
         else:
             for i, row in df_names_data_base.iterrows():
@@ -120,27 +127,28 @@ class Model(object):
                     if gender == 'm':
                         index = df_indices['current_m_index'][0] + 1
                         # find the next male name, and it can't be the same name
-                        while df_names_data_base['02_genre'][index] != 'm' or df_names_data_base['01_prenom'][index] == name:
+                        while df_pseudonums['02_genre'][index] != 'm' or df_pseudonums['01_prenom'][index] == name:
                             index += 1
-                        pseudonym = df_names_data_base['01_prenom'][index]
+                        pseudonym = df_pseudonums['01_prenom'][index]
                         df_used_names = df_used_names.append({'name': name, 'pseudonym': pseudonym}, ignore_index=True)
                         df_indices['current_m_index'] = index
-                        df_used_names.to_csv('used_names.csv', index=False)
-                        df_indices.to_csv('indices.csv', index=False)
+                        df_used_names.to_csv('utils/used_names.csv', index=False)
+                        df_indices.to_csv('utils/indices.csv', index=False)
                         return pseudonym
                     # if the gender is female or m/f or f/m
                     else:
                         index = df_indices['current_f_index'][0] + 1
                         # find the next female name, and it can't be the same name
-                        while df_names_data_base['02_genre'][index] == 'm' or df_names_data_base['01_prenom'][index] == name:
+                        while df_pseudonums['02_genre'][index] == 'm' or df_pseudonums['01_prenom'][index] == name:
                             index += 1
-                        pseudonym = df_names_data_base['01_prenom'][index]
+                        pseudonym = df_pseudonums['01_prenom'][index]
                         df_used_names = df_used_names.append({'name': name, 'pseudonym': pseudonym}, ignore_index=True)
                         df_indices['current_f_index'] = index
-                        df_used_names.to_csv('used_names.csv', index=False)
-                        df_indices.to_csv('indices.csv', index=False)
+                        df_used_names.to_csv('utils/used_names.csv', index=False)
+                        df_indices.to_csv('utils/indices.csv', index=False)
                         return pseudonym
-            # if the name doesn't exist in the data base, it will be replaced with "$NAME$"
-            df_used_names = df_used_names.append({'name': name, 'pseudonym': '$NAME$'}, ignore_index=True)
-            df_used_names.to_csv('used_names.csv', index=False)
-            return '$NAME$'
+
+            # if the name doesn't exist in the data base, it will be replaced with "$PER$"
+            df_used_names = df_used_names.append({'name': name, 'pseudonym': '$PER$'}, ignore_index=True)
+            df_used_names.to_csv('utils/used_names.csv', index=False)
+            return '$PER$'
