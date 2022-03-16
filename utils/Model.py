@@ -74,7 +74,7 @@ class Model(object):
         Args:
             doc (Document): the Document object to be pseudonimised.
         Returns:
-            (str): pseudonymized text.
+            doc.text (str): pseudonymized text.
         """
         # PER part
 
@@ -102,9 +102,9 @@ class Model(object):
         """
         Pseudonymizes the name.
         Args:
-            name: the name to be replaced
+            name (str): the name to be replaced
         Returns:
-            the pseudonym
+            (str): the pseudonym
         """
         # source: https://www.data.gouv.fr/fr/datasets/liste-de-prenoms/#community-resources
         df_names_data_base = pd.read_csv('utils/analyses-trails-in-france-prenoms-hf.csv', header=[
