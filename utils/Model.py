@@ -85,7 +85,7 @@ class Model(object):
         for ent in doc.ents:
             if ent[2] == 'PER':
                 name = doc.text[ent[0]:ent[1]]
-                pseudonym = self.pseudo_name(name)
+                pseudonym = self.pseudo_per(name)
                 pseudonyms.append(pseudonym)
                 pseudonyms_indices.append(ent[0])
                 pseudonyms_indices.append(ent[1])
@@ -98,7 +98,7 @@ class Model(object):
         doc.text = text
         return doc.text
 
-    def pseudo_name(self, name):
+    def pseudo_per(self, name):
         """
         Pseudonymizes the name.
         Args:
